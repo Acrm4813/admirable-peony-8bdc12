@@ -14,8 +14,6 @@ body{background:var(--bg);color:var(--ink);font:16px/1.5 "DM Sans",system-ui,-ap
 main{max-width:860px;margin:0 auto;padding:20px 16px 48px}
 h1{font-size:1.1rem;margin:0;font-weight:700}
 header{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:20px}
-header .who{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:.85rem;min-width:0}
-header .who span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px}
 nav{display:flex;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:20px;overflow-x:auto}
 nav button{flex:1;border:0;background:none;color:var(--muted);font:inherit;font-weight:500;padding:9px 12px;border-radius:9px;cursor:pointer;white-space:nowrap}
 nav button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
@@ -51,10 +49,6 @@ td input{width:90px;padding:5px 8px;text-align:right}
 .note{color:var(--muted);font-size:.85rem;margin:10px 0 0}
 .empty{color:var(--muted);padding:10px 0}
 .msg{min-height:1.3em;margin:8px 0 0;font-size:.9rem}
-.auth{max-width:420px;margin:6vh auto 0}
-.auth form{grid-template-columns:1fr}
-.auth h2{font-size:1.4rem}
-.link{background:none;border:0;color:var(--muted);font:inherit;text-decoration:underline;cursor:pointer;padding:6px 0}
 .about p{max-width:62ch;margin:0 0 10px}
 .pet-panel{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
 .pet{flex:0 0 120px}
@@ -80,24 +74,9 @@ td input{width:90px;padding:5px 8px;text-align:right}
 <main>
 <header>
  <h1>Ledger</h1>
- <div class="who" id="who" hidden><span id="email"></span><button class="btn ghost" id="out">Sign out</button></div>
 </header>
 
-<section id="auth" hidden>
- <div class="panel auth">
-  <h2 id="atitle">Sign in</h2>
-  <p class="stat-l" style="margin:0 0 14px">Track your income and spending, follow live markets, and log your investments. Your data is private to your account.</p>
-  <form id="af">
-   <label>Email<input name="email" type="email" autocomplete="email" required></label>
-   <label>Password<input name="pw" type="password" minlength="8" autocomplete="current-password" required></label>
-   <button class="btn" type="submit" id="abtn">Sign in</button>
-  </form>
-  <p class="msg" id="amsg" role="status"></p>
-  <button class="link" id="atoggle" type="button">New here? Create an account</button>
- </div>
-</section>
-
-<section id="app" hidden>
+<section id="app">
  <nav role="tablist">
   <button role="tab" data-tab="overview" aria-selected="true">Overview</button>
   <button role="tab" data-tab="money" aria-selected="false">Money</button>
@@ -115,29 +94,21 @@ td input{width:90px;padding:5px 8px;text-align:right}
   <div class="panel">
    <h2>About Ledger</h2>
    <p>Ledger keeps your money in one place: what comes in, what goes out, and what you have invested. Your net worth is your cash plus the market value of your holdings.</p>
-   <p><b>Accounts.</b> Anyone can create an account with an email and password. Each account’s data is stored privately and can only be read by its owner.</p>
-   <p><b>Live information.</b> Stocks and ETFs come from Finnhub, crypto from CoinGecko and exchange rates from Frankfurter. The Markets tab refreshes every minute while the app is open. Free data feeds can be delayed, so check your broker before you trade.</p>
-   <p><b>Investing.</b> Ledger records trades you enter. It can’t place real orders. Trade with your broker, then log it in Invest so your totals stay accurate.</p>
+   <p><b>Live information.</b> Stocks and ETFs come from Finnhub, crypto from CoinGecko and exchange rates from Frankfurter. The Markets tab refreshes every minute while the app is open.</p>
    <p class="note">Ledger is a tracking tool, not financial advice.</p>
   </div>
  </section>
 </section>
 </main>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
-/* ====== SETUP: paste your Supabase project values (Project settings > API). The anon key is public by design. ====== */
-var SUPABASE_URL="https://cuzbuqnpnkzqssxbwjx.supabase.co";
-var SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN1emJ1cW5wbmt6cXNzeGJ4d2p4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMyMDQ4MDgsImV4cCI6MjEwODc4MDgwOH0.9U-iio9uy9RGKvMHcitUvedNcVppuDswhK1hxWGwYJs";
-/* ================================================================================================================ */
-
 var CATS=["Salary","Freelance","Housing","Food","Transport","Bills","Health","Fun","Other"];
 var STOCKS=["SPY","QQQ","VTI","AAPL","MSFT","NVDA"];
 var CRYPTO={BTC:"bitcoin",ETH:"ethereum",SOL:"solana"};
 var FXS=["MXN","EUR","GBP"];
-var S={tx:[],trades:[],prices:{},goals:[]};
+var S=JSON.parse(localStorage.getItem("ledger_data")||'{"tx":[],"trades":[],"prices":{},"goals":[]}');
 var M={q:{},fx:{},at:null,err:""};
-var PRE=null,investMsg="",tipI=0,savMsg="",sb=null,user=null,saveT=null,mode="in";
+var PRE=null,investMsg="",tipI=0,savMsg="";
 
 function $(id){return document.getElementById(id)}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
@@ -146,18 +117,10 @@ function today(){return new Date().toISOString().slice(0,10)}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
 function each(sel,fn){Array.prototype.forEach.call(document.querySelectorAll(sel),fn)}
 
-/* ---------- saving (per-user, in Supabase) ---------- */
 function save(){
-  if(!sb||!user)return;
-  clearTimeout(saveT);
-  saveT=setTimeout(function(){
-    sb.from("ledger").upsert({user_id:user.id,data:S,updated_at:new Date().toISOString()}).then(function(r){
-      if(r.error){investMsg='<span class="neg">Couldn’t save your data. Check your connection.</span>'}
-    });
-  },500);
+  localStorage.setItem("ledger_data", JSON.stringify(S));
 }
 
-/* ---------- finance maths ---------- */
 function holdings(){
   var h={};
   S.trades.slice().sort(function(a,b){return a.date<b.date?-1:1}).forEach(function(t){
@@ -175,23 +138,14 @@ function cash(){
   return c;
 }
 
-/* ---------- live market data ---------- */
 function fetchMarkets(){
-  if(!sb||!user)return Promise.resolve();
-  var hs=holdings().map(function(h){return h.sym}).filter(function(s){return !CRYPTO[s]});
-  var syms=STOCKS.concat(hs).filter(function(s,i,a){return a.indexOf(s)===i});
   var ids=Object.keys(CRYPTO).map(function(k){return CRYPTO[k]}).join(",");
   M.err="";
-  var p1=sb.auth.getSession().then(function(r){
-    return fetch("/.netlify/functions/quote?symbols="+syms.join(","),{headers:{Authorization:"Bearer "+r.data.session.access_token}});
-  }).then(function(r){return r.ok?r.json():Promise.reject(r.status)}).then(function(j){
-    Object.keys(j).forEach(function(k){M.q[k]=j[k]});
-  }).catch(function(e){M.err="Stock prices aren’t available right now (error "+e+"). Check that the Netlify function and FINNHUB_API_KEY are set up."});
   var p2=fetch("https://api.coingecko.com/api/v3/simple/price?ids="+ids+"&vs_currencies=usd&include_24hr_change=true").then(function(r){return r.json()}).then(function(j){
     Object.keys(CRYPTO).forEach(function(k){var d=j[CRYPTO[k]];if(d)M.q[k]={price:d.usd,change:d.usd_24h_change}});
   }).catch(function(){});
   var p3=fetch("https://api.frankfurter.dev/v1/latest?base=USD&symbols="+FXS.join(",")).then(function(r){return r.json()}).then(function(j){M.fx=j.rates||{}}).catch(function(){});
-  return Promise.all([p1,p2,p3]).then(function(){
+  return Promise.all([p2,p3]).then(function(){
     M.at=new Date();
     holdings().forEach(function(h){if(M.q[h.sym])S.prices[h.sym]=M.q[h.sym].price});
     save();
@@ -205,7 +159,6 @@ function refresh(auto){
   });
 }
 
-/* ---------- views ---------- */
 function renderOverview(){
   var hs=holdings(),inv=hs.reduce(function(a,h){return a+h.value},0),cb=cash(),nw=cb+inv;
   var m=today().slice(0,7),inc=0,exp=0,by={};
@@ -255,10 +208,8 @@ function renderMarkets(){
   var head='<thead><tr><th>Symbol</th><th>Price</th><th>Today</th><th></th></tr></thead>';
   var fx=FXS.map(function(c){return '<tr><td><b>USD/'+c+'</b></td><td>'+(M.fx[c]?M.fx[c].toFixed(4):"–")+'</td></tr>'}).join("");
   $("markets").innerHTML=
-   '<div class="panel"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h2 style="margin:0">Stocks and ETFs</h2><button class="btn ghost" id="rf">Refresh</button></div>'+
-   (M.err?'<p class="msg neg">'+esc(M.err)+'</p>':'')+
-   '<div class="scroll"><table>'+head+'<tbody>'+mrows(STOCKS)+'</tbody></table></div></div>'+
-   '<div class="panel"><h2>Crypto</h2><div class="scroll"><table>'+head+'<tbody>'+mrows(Object.keys(CRYPTO))+'</tbody></table></div></div>'+
+   '<div class="panel"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h2 style="margin:0">Crypto and Exchange rates</h2><button class="btn ghost" id="rf">Refresh</button></div>'+
+   '<div class="scroll"><table>'+head+'<tbody>'+mrows(Object.keys(CRYPTO))+'</tbody></table></div></div>'+
    '<div class="panel"><h2>Exchange rates</h2><div class="scroll"><table><tbody>'+fx+'</tbody></table></div>'+
    '<p class="note">'+(M.at?'Updated '+M.at.toLocaleTimeString()+'. Refreshes every minute.':'Loading prices…')+' Free feeds can be delayed.</p></div>';
   $("rf").onclick=function(){refresh(false)};
@@ -275,8 +226,8 @@ function renderInvest(){
    '<label>Price per share<input name="price" type="number" step="0.01" min="0.01" value="'+(pre.price?pre.price.toFixed(2):"")+'" required></label>'+
    '<button class="btn" type="submit">Save trade</button></form>'+
    '<p class="msg" role="status">'+investMsg+'</p>'+
-   '<p class="note">Available cash: '+usd(cash())+'. Ledger records trades you make; it can’t place real orders. Trade with your broker, then log it here.</p></div>'+
-   '<div class="panel"><h2>Holdings</h2>'+(hs.length?'<div class="scroll"><table><thead><tr><th>Symbol</th><th>Shares</th><th>Avg cost</th><th>Price</th><th>Value</th><th>Gain/loss</th></tr></thead><tbody>'+hs.map(function(h){var g=h.value-h.cost;return '<tr><td><b>'+esc(h.sym)+'</b></td><td>'+(+h.qty.toFixed(4))+'</td><td>'+usd(h.cost/h.qty)+'</td><td><input type="number" step="0.01" min="0" value="'+h.price+'" data-price="'+esc(h.sym)+'" aria-label="Current price of '+esc(h.sym)+'"></td><td>'+usd(h.value)+'</td><td class="'+(g>=0?"pos":"neg")+'">'+(g>=0?"+":"")+usd(g)+'</td></tr>'}).join("")+'</tbody></table></div><p class="note">Prices update from live data when available. You can also edit one by hand.</p>':'<div class="empty">No holdings yet. Pick an asset in Markets or log your first trade above.</div>')+'</div>';
+   '<p class="note">Available cash: '+usd(cash())+'. Ledger records trades you make; it can’t place real orders.</p></div>'+
+   '<div class="panel"><h2>Holdings</h2>'+(hs.length?'<div class="scroll"><table><thead><tr><th>Symbol</th><th>Shares</th><th>Avg cost</th><th>Price</th><th>Value</th><th>Gain/loss</th></tr></thead><tbody>'+hs.map(function(h){var g=h.value-h.cost;return '<tr><td><b>'+esc(h.sym)+'</b></td><td>'+(+h.qty.toFixed(4))+'</td><td>'+usd(h.cost/h.qty)+'</td><td><input type="number" step="0.01" min="0" value="'+h.price+'" data-price="'+esc(h.sym)+'" aria-label="Current price of '+esc(h.sym)+'"></td><td>'+usd(h.value)+'</td><td class="'+(g>=0?"pos":"neg")+'">'+(g>=0?"+":"")+usd(g)+'</td></tr>'}).join("")+'</tbody></table></div><p class="note">Prices update locally.</p>':'<div class="empty">No holdings yet. Log your first trade above.</div>')+'</div>';
   var si=document.querySelector("#trf [name=sym]");
   si.onchange=function(){var q=M.q[si.value.trim().toUpperCase()];var pi=document.querySelector("#trf [name=price]");if(q&&!pi.value)pi.value=q.price.toFixed(2)};
   $("trf").onsubmit=function(e){
@@ -291,7 +242,7 @@ function renderInvest(){
   };
   each("#invest [data-price]",function(i){i.onchange=function(){var v=parseFloat(i.value);if(v>=0){S.prices[i.dataset.price]=v;save();investMsg="";renderAll()}}});
 }
-/* ---------- ahorros: metas + mascota con consejos (reglas simples, sin API externa) ---------- */
+
 function reserved(){return S.goals.reduce(function(a,g){return a+g.saved},0)}
 function monthStats(){
   var m=today().slice(0,7),inc=0,exp=0,by={};
@@ -316,7 +267,7 @@ function petSvg(k){
   if(k==="happy")f+='<path d="M34 60q6-10 12 0M74 60q6-10 12 0"'+st+'/><path d="M48 96q12 9 24 0"'+st+'/><circle cx="27" cy="76" r="6" fill="#ff6f91" opacity=".5"/><circle cx="93" cy="76" r="6" fill="#ff6f91" opacity=".5"/><circle cx="60" cy="20" r="8" fill="#f5c542" stroke="#b8860b" stroke-width="2"/><text x="60" y="24" text-anchor="middle" font-size="11" font-weight="700" fill="#8a6a00" font-family="sans-serif">$</text>';
   else if(k==="sad")f+='<circle cx="40" cy="60" r="4.5" fill="'+ink+'"/><circle cx="80" cy="60" r="4.5" fill="'+ink+'"/><path d="M32 50l14 6M88 50l-14 6"'+st+'/><path d="M50 101q10-8 20 0"'+st+'/><path d="M36 68q-6 9 0 12q6-3 0-12z" fill="#6ab7ff"/>';
   else f+='<circle cx="40" cy="60" r="4.5" fill="'+ink+'"/><circle cx="80" cy="60" r="4.5" fill="'+ink+'"/><path d="M52 97h16"'+st+'/>';
-  return '<svg viewBox="0 0 120 120" role="img" aria-label="Moni, tu cerdito ahorrador: '+({happy:"feliz",sad:"triste",neutral:"tranquilo"})[k]+'">'+f+'</svg>';
+  return '<svg viewBox="0 0 120 120" role="img" aria-label="Moni, tu cerdito ahorrador">'+f+'</svg>';
 }
 function tips(m){
   var t=[],av=cash()-reserved();
@@ -379,64 +330,21 @@ function renderSavings(){
     S.goals=S.goals.filter(function(g){return g.id!==b.dataset.gdel});savMsg="";save();renderAll();
   }});
 }
+
 function renderAll(){renderOverview();renderMoney();renderSavings();renderMarkets();renderInvest()}
 
-/* ---------- tabs ---------- */
 function goTab(t){
   each("nav button",function(x){x.setAttribute("aria-selected",x.dataset.tab===t)});
   ["overview","money","savings","markets","invest","about"].forEach(function(id){$(id).hidden=id!==t});
 }
 each("nav button",function(b){b.onclick=function(){goTab(b.dataset.tab)}});
 
-/* ---------- accounts ---------- */
-function showAuth(on){$("auth").hidden=!on;$("app").hidden=on;$("who").hidden=on}
-function setMode(m){
-  mode=m;$("atitle").textContent=m==="in"?"Sign in":"Create your account";
-  $("abtn").textContent=m==="in"?"Sign in":"Create account";
-  $("atoggle").textContent=m==="in"?"New here? Create an account":"Already have an account? Sign in";
-  document.querySelector("#af [name=pw]").autocomplete=m==="in"?"current-password":"new-password";
-  $("amsg").textContent="";
-}
-$("atoggle").onclick=function(){setMode(mode==="in"?"up":"in")};
-$("af").onsubmit=function(e){
-  e.preventDefault();
-  if(!sb)return;
-  var f=new FormData(e.target),email=String(f.get("email")).trim(),pw=String(f.get("pw"));
-  var msg=$("amsg");msg.className="msg";msg.textContent="One moment…";
-  var req=mode==="in"?sb.auth.signInWithPassword({email:email,password:pw}):sb.auth.signUp({email:email,password:pw});
-  req.then(function(r){
-    if(r.error){msg.className="msg neg";msg.textContent=r.error.message;return}
-    if(mode==="up"&&!r.data.session){msg.className="msg pos";msg.textContent="Account created. Check your email to confirm it, then sign in."}
-  });
-};
-$("out").onclick=function(){if(sb)sb.auth.signOut()};
-
-function loadUser(){
-  sb.from("ledger").select("data").eq("user_id",user.id).maybeSingle().then(function(r){
-    var d=r.data&&r.data.data;
-    S={tx:(d&&d.tx)||[],trades:(d&&d.trades)||[],prices:(d&&d.prices)||{},goals:(d&&d.goals)||[]};
-    $("email").textContent=user.email||"";
-    showAuth(false);goTab("overview");renderAll();refresh(false);
-  });
-}
-
 function boot(){
-  if(SUPABASE_URL.indexOf("YOUR-")===0||!window.supabase){
-    showAuth(true);
-    $("af").hidden=true;$("atoggle").hidden=true;
-    $("amsg").className="msg neg";
-    $("amsg").textContent="Setup needed: add your Supabase URL and anon key at the top of index.html.";
-    return;
-  }
-  sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
-  sb.auth.onAuthStateChange(function(ev,session){
-    setTimeout(function(){
-      if(session&&session.user){if(!user||user.id!==session.user.id){user=session.user;loadUser()}}
-      else{user=null;S={tx:[],trades:[],prices:{},goals:[]};showAuth(true)}
-    },0);
-  });
+  goTab("overview");
+  renderAll();
+  refresh(false);
 }
-setInterval(function(){if(user&&!document.hidden)refresh(true)},60000);
+setInterval(function(){if(!document.hidden)refresh(true)},60000);
 boot();
 </script>
 </body>
